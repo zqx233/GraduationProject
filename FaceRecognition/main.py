@@ -76,9 +76,10 @@ class Face(Frame):
         self.fun1_win = LabelFrame(master=self.master, text='人脸识别与属性分析')
         self.fun1_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's')
         # 识别结果部分
-        self.result_frame = LabelFrame(master=self.fun1_win, text='识别结果', width=85, height=50)
+        self.result_frame = LabelFrame(master=self.fun1_win, text='识别结果', width=285, height=510)
+        self.face_result_frame = Frame(master=self.result_frame)
         # 图片展示部分
-        self.img_frame = LabelFrame(master=self.fun1_win, text='图片')
+        self.img_frame = LabelFrame(master=self.fun1_win, text='')
         self.up_img = PhotoImage(file='src/img/upload.png')
         self.img_label = Label(self.img_frame, width=680, height=400, image=self.up_img)
         # 上传图片以及参数部分
@@ -90,7 +91,7 @@ class Face(Frame):
         self.params_label = Label(self.up_frame, text='识别参数：')
         # self.live = IntVar()
         # self.live_check = Checkbutton(master=self.up_frame, text='图片活体检测', variable=self.live, )
-        self.params = {'age': ['年龄'], 'beauty': ['颜值'], 'expression': ['表情'], 'faceshape': ['脸型'], 'gender': ['性别'],
+        self.params = {'age': ['年龄'], 'beauty': ['颜值'], 'expression': ['表情'], 'face_shape': ['脸型'], 'gender': ['性别'],
                        'glasses': ['眼镜'], 'emotion': ['情绪'], 'mask': ['口罩']}
         i = 1
         for param in self.params:
@@ -105,7 +106,8 @@ class Face(Frame):
         # 布局
         self.img_frame.grid(row=1, column=2, padx=5)
         self.up_frame.grid(row=2, column=2, padx=5, sticky='w' + 'e')
-        self.result_frame.grid(row=1, column=3, padx=5)
+        self.result_frame.grid(row=1, column=3, padx=5, rowspan=2, sticky='n' + 's')
+        self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
         self.img_label.grid(row=2, column=2)
         self.file_entry.grid(row=3, column=2, columnspan=7, padx=0, sticky='w' + 'e')
         self.ok_but.grid(row=3, column=10, sticky='e')
@@ -118,28 +120,50 @@ class Face(Frame):
 
     def face_recognition(self, event):
         """上传图片请求识别，返回识别结果，不要开代理！！！"""
-        # print(self.params['age'][0])
-        # print(self.params['age'][1].get())
-        # for p in self.params:
-        #     print(self.params[p][0])
-        #     print(self.params[p][1].get())
+        self.face_field = ''
+        for p in self.params:
+            if self.params[p][1].get():
+                self.face_field = self.face_field + p + ','
+                print(self.face_field)
+            # print(self.params[p][0])
+            # print(self.params[p][1].get())
         print(self.file_path)
         with open(self.file_path, 'rb') as f:
             img_base64 = base64.b64encode(f.read())
             b64 = img_base64.decode()
         request_url = "https://aip.baidubce.com/rest/2.0/face/v3/detect"
-        params = "{\"image\":\"" + b64 + "\",\"image_type\":\"BASE64\",\"face_field\":\"faceshape,facetype\"}"
+        params = "{\"image\":\"" + b64 + "\",\"image_type\":\"BASE64\",\"face_field\":\"" + self.face_field + "\",\"max_face_num\":\"30\"} "
         # access_token只有一个月有效期，最后记得完善一下
-        access_token = '25.c2d73845505a3513d7679397a893e361.315360000.1926425558.282335-23545866'
+        access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'
         request_url = request_url + "?access_token=" + access_token
         headers = {'content-type': 'application/json'}
         response = requests.post(request_url, data=params, headers=headers)
         if response:
-            print(response.json())
+            self.result_json = response.json()
+            print(self.result_json)
+            self.show_result()
+
+    def show_result(self):
+        i = 1
+        self.face_result_frame.destroy()
+        self.face_result_frame = Frame(master=self.result_frame)
+        self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
+        for r_p in self.params:
+            i = i + 1
+            self.result_label = Label(master=self.face_result_frame, text=self.params[r_p][0] + '：', font=('', 12))
+            self.result_label.grid(row=i, column=2)
+            if self.params[r_p][1].get():
+                if r_p in ('age', 'beauty'):
+                    self.result_label['text'] = self.params[r_p][0] + ':' + \
+                                                str(self.result_json['result']['face_list'][0][r_p])
+                else:
+                    self.result_label['text'] = self.params[r_p][0] + ':' + str(
+                        self.result_json['result']['face_list'][0][r_p]['type'])
 
     def open_file(self, event):
         """打开选择的文件并显示"""
-        self.file_path = tkinter.filedialog.askopenfilename()
+        self.file_path = tkinter.filedialog.askopenfilename(
+            filetypes=[('JPG', '.jpg'), ('JPEG', '.jpeg'), ('PNG', '.png'), ('BMP', '.bmp')])
         self.file_entry.delete(0, END)
         self.file_entry.insert(END, self.file_path)
         self.up_img = Image.open(self.file_path)  # PhotoImage打开会报错，使用PIL库的ImageTK
@@ -159,6 +183,6 @@ class Face(Frame):
 if __name__ == '__main__':
     root = Tk()
     root.title('人脸识别系统V0.1')
-    # root.geometry('1500x600')
+    root.geometry('1170x792')
     Home(master=root)
     root.mainloop()
