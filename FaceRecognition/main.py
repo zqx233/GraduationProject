@@ -1,7 +1,9 @@
 import base64
+import json
 from tkinter import *
 import tkinter.filedialog
 import tkinter.messagebox
+from tkinter import ttk
 
 import requests
 from PIL import Image
@@ -51,7 +53,7 @@ class Home(Frame):
         Face(master=self.master)
 
     def fun2_but_ev(self, event):
-        Face(master=self.master)
+        FaceCompare(master=self.master)
 
     def fun3_but_ev(self, event):
         Face(master=self.master)
@@ -74,21 +76,21 @@ class Face(Frame):
         # self.fun1_win.title('人脸识别与属性分析')
         # self.grid()
         self.fun1_win = LabelFrame(master=self.master, text='人脸识别与属性分析')
-        self.fun1_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's')
+        self.fun1_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
         # 识别结果部分
-        self.result_frame = LabelFrame(master=self.fun1_win, text='识别结果', width=285, height=510)
-        self.face_result_frame = Frame(master=self.result_frame)
+        self.result_frame = LabelFrame(master=self.fun1_win, text='识别结果', width=280)
+        self.face_result_frame = Frame(master=self.result_frame, width=280)
         # 图片展示部分
         self.img_frame = LabelFrame(master=self.fun1_win, text='')
         self.up_img = PhotoImage(file='src/img/upload.png')
         self.img_label = Label(self.img_frame, width=680, height=400, image=self.up_img)
         # 上传图片以及参数部分
-        self.up_frame = LabelFrame(master=self.fun1_win, text='上传图片')
-        self.file_entry = Entry(self.up_frame, font=('', 17))
-        self.ok_but = Button(self.up_frame, text='确  定', )
+        self.upload_img_frame = LabelFrame(master=self.fun1_win, text='上传图片')
+        self.file_entry = Entry(self.upload_img_frame, font=('', 17))
+        self.ok_but = Button(self.upload_img_frame, text='确  定', )
         self.folder_img = PhotoImage(file='src/img/folder.png')
-        self.folder_but = Button(self.up_frame, image=self.folder_img)
-        self.params_label = Label(self.up_frame, text='识别参数：')
+        self.folder_but = Button(self.upload_img_frame, image=self.folder_img)
+        self.params_label = Label(self.upload_img_frame, text='识别参数：')
         # self.live = IntVar()
         # self.live_check = Checkbutton(master=self.up_frame, text='图片活体检测', variable=self.live, )
         self.params = {'age': ['年龄'], 'beauty': ['颜值'], 'expression': ['表情'], 'face_shape': ['脸型'], 'gender': ['性别'],
@@ -99,14 +101,15 @@ class Face(Frame):
             # print(type(param))
             self.params[param].append(BooleanVar())
             # print(self.params[param])
-            self.params_check = Checkbutton(master=self.up_frame, text=self.params[param][0], font=('', 12),
+            self.params_check = Checkbutton(master=self.upload_img_frame, text=self.params[param][0], font=('', 12),
                                             variable=self.params[param][1])
             self.params_check.grid(row=5, column=i)
 
         # 布局
         self.img_frame.grid(row=1, column=2, padx=5)
-        self.up_frame.grid(row=2, column=2, padx=5, sticky='w' + 'e')
-        self.result_frame.grid(row=1, column=3, padx=5, rowspan=2, sticky='n' + 's')
+        self.upload_img_frame.grid(row=2, column=2, padx=5, sticky='w' + 'e')
+        self.result_frame.grid(row=1, column=3, padx=5, rowspan=2, columnspan=3, sticky='n' + 's' + 'w' + 'e')
+        self.result_frame.grid_propagate(flag=False)  # 阻止父组件自动调节尺寸以容纳所有子组件，默认值是True，该方法仅适用于父组件
         self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
         self.img_label.grid(row=2, column=2)
         self.file_entry.grid(row=3, column=2, columnspan=7, padx=0, sticky='w' + 'e')
@@ -146,19 +149,37 @@ class Face(Frame):
     def show_result(self):
         i = 1
         self.face_result_frame.destroy()
-        self.face_result_frame = Frame(master=self.result_frame)
+        self.face_result_frame = Frame(master=self.result_frame, width=280)
+        # 选择查看识别结果
+        # self.face_result_label = Label(master=self.face_result_frame,
+        #                                text='识别到' + str(self.result_json['result']['face_num']) + '张人脸，查看第', font=('', 12))
+        # self.face_result_but = ttk.Combobox(master=self.face_result_frame, )
+
         self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
+        # self.face_result_label.grid(row=1, column=2, columnspan=2, sticky='w')
+
+        origin_result = ['none', 'smile', '', 'square', 'triangle', 'oval', 'heart', 'round', 'male', 'female',
+                         'common', 'sun', 'angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral', 'pouty',
+                         'grimace']
+
         for r_p in self.params:
             i = i + 1
             self.result_label = Label(master=self.face_result_frame, text=self.params[r_p][0] + '：', font=('', 12))
-            self.result_label.grid(row=i, column=2)
+            self.result_label.grid(row=i, column=2, columnspan=3, sticky='w')
             if self.params[r_p][1].get():
                 if r_p in ('age', 'beauty'):
                     self.result_label['text'] = self.params[r_p][0] + ':' + \
                                                 str(self.result_json['result']['face_list'][0][r_p])
                 else:
                     self.result_label['text'] = self.params[r_p][0] + ':' + str(
-                        self.result_json['result']['face_list'][0][r_p]['type'])
+                        self.result_json['result']['face_list'][0][r_p]['type']).replace('none', '无').replace('smile',
+                                                                                                              '微笑').replace(
+                        'laugh', '大笑').replace('square', '方形').replace('triangle', '三角形').replace('oval', '椭圆').replace(
+                        'heart', '心形').replace('round', '圆形').replace('female', '女性').replace('male', '男性').replace(
+                        'common', '普通眼镜').replace('sun', '墨镜').replace('angry', '愤怒').replace('disgust', '厌恶').replace(
+                        'fear', '恐惧').replace('happy', '高兴').replace('sad', '伤心').replace('surprise', '惊讶').replace(
+                        'neutral', '无').replace('pouty', '撅嘴').replace('grimace', '鬼脸').replace('0', '无').replace('1',
+                                                                                                                  '有')
 
     def open_file(self, event):
         """打开选择的文件并显示"""
@@ -178,6 +199,29 @@ class Face(Frame):
                                           Image.ANTIALIAS)
         self.show_img = ImageTk.PhotoImage(self.out_img)
         self.img_label['image'] = self.show_img
+
+
+class FaceCompare(Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        # 功能2窗口
+        self.fun2_win = LabelFrame(master=self.master, text='人脸对比')
+        # 图片1部分
+        self.img1_frame = LabelFrame(master=self.fun2_win, text='图片1')
+        # 图片2部分
+        self.img2_frame = LabelFrame(master=self.fun2_win, text='图片2')
+        # 图片1上传
+        self.upload_img1_frame = LabelFrame(master=self.fun2_win, text='上传图片1')
+        # 图片2上传
+        self.upload_img2_frame = LabelFrame(master=self.fun2_win, text='上传图片2')
+
+        # 布局
+        self.fun2_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
+        self.img1_frame.grid(row=2, column=2, padx=5)
+        self.img2_frame.grid(row=2, column=3, padx=5)
+        self.upload_img1_frame.grid(row=3, column=2)
+        self.upload_img2_frame.grid(row=3, column=3)
 
 
 if __name__ == '__main__':
