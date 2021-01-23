@@ -8,6 +8,7 @@ from tkinter import ttk
 import requests
 from PIL import Image
 from PIL import ImageTk
+import functions as fc
 
 
 class Home(Frame):
@@ -87,9 +88,9 @@ class Face(Frame):
         # 上传图片以及参数部分
         self.upload_img_frame = LabelFrame(master=self.fun1_win, text='上传图片')
         self.file_entry = Entry(self.upload_img_frame, font=('', 17))
-        self.ok_but = Button(self.upload_img_frame, text='确  定', )
         self.folder_img = PhotoImage(file='src/img/folder.png')
         self.folder_but = Button(self.upload_img_frame, image=self.folder_img)
+        self.ok_but = Button(self.upload_img_frame, text='确  定', )
         self.params_label = Label(self.upload_img_frame, text='识别参数：')
         # self.live = IntVar()
         # self.live_check = Checkbutton(master=self.up_frame, text='图片活体检测', variable=self.live, )
@@ -113,8 +114,8 @@ class Face(Frame):
         self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
         self.img_label.grid(row=2, column=2)
         self.file_entry.grid(row=3, column=2, columnspan=7, padx=0, sticky='w' + 'e')
-        self.ok_but.grid(row=3, column=10, sticky='e')
         self.folder_but.grid(row=3, column=9, sticky='w')
+        self.ok_but.grid(row=3, column=10, sticky='e')
         self.params_label.grid(row=4, column=2)
 
         # 按键绑定
@@ -128,23 +129,11 @@ class Face(Frame):
             if self.params[p][1].get():
                 self.face_field = self.face_field + p + ','
                 print(self.face_field)
-            # print(self.params[p][0])
-            # print(self.params[p][1].get())
         print(self.file_path)
-        with open(self.file_path, 'rb') as f:
-            img_base64 = base64.b64encode(f.read())
-            b64 = img_base64.decode()
-        request_url = "https://aip.baidubce.com/rest/2.0/face/v3/detect"
-        params = "{\"image\":\"" + b64 + "\",\"image_type\":\"BASE64\",\"face_field\":\"" + self.face_field + "\",\"max_face_num\":\"30\"} "
-        # access_token只有一个月有效期，最后记得完善一下
-        access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'
-        request_url = request_url + "?access_token=" + access_token
-        headers = {'content-type': 'application/json'}
-        response = requests.post(request_url, data=params, headers=headers)
-        if response:
-            self.result_json = response.json()
-            print(self.result_json)
-            self.show_result()
+        # 之后将文件路径参数改成从entry控件获取
+        self.result_json = fc.base64_recognition(self.file_path, self.face_field)
+        print(self.result_json)
+        self.show_result()
 
     def show_result(self):
         i = 1
@@ -183,21 +172,11 @@ class Face(Frame):
 
     def open_file(self, event):
         """打开选择的文件并显示"""
-        self.file_path = tkinter.filedialog.askopenfilename(
-            filetypes=[('JPG', '.jpg'), ('JPEG', '.jpeg'), ('PNG', '.png'), ('BMP', '.bmp')])
+        self.file_path = fc.open_file()
+        print(self.file_path)
         self.file_entry.delete(0, END)
         self.file_entry.insert(END, self.file_path)
-        self.up_img = Image.open(self.file_path)  # PhotoImage打开会报错，使用PIL库的ImageTK
-        # 按比例将图片缩放到Frame大小，也可以用self.up_img.width或.height获取宽高数值
-        if (self.up_img.size[0] / self.up_img.size[1]) > (680 / 400):
-            rate = 680 / self.up_img.size[0]
-        else:
-            rate = 400 / self.up_img.size[1]
-        rate = round(rate, 1)
-        # pillow中调整图片大小的方法，第二个参数是图片质量Image.NEAREST ：低质量Image.BILINEAR：双线性Image.BICUBIC ：三次样条插值Image.ANTIALIAS：高质量
-        self.out_img = self.up_img.resize((int(self.up_img.size[0] * rate), int(self.up_img.size[1] * rate)),
-                                          Image.ANTIALIAS)
-        self.show_img = ImageTk.PhotoImage(self.out_img)
+        self.show_img = fc.modify_img(self.file_path, 680, 400)
         self.img_label['image'] = self.show_img
 
 
@@ -209,18 +188,45 @@ class FaceCompare(Frame):
         self.fun2_win = LabelFrame(master=self.master, text='人脸对比')
         # 图片1部分
         self.img1_frame = LabelFrame(master=self.fun2_win, text='图片1')
+        self.up_img1 = PhotoImage(file='src/img/upload.png')
+        self.img1_label = Label(master=self.img1_frame, image=self.up_img1, width=485, height=400)
         # 图片2部分
         self.img2_frame = LabelFrame(master=self.fun2_win, text='图片2')
+        self.img2_label = Label(master=self.img2_frame, image=self.up_img1, width=485, height=400)
         # 图片1上传
         self.upload_img1_frame = LabelFrame(master=self.fun2_win, text='上传图片1')
+        self.file1_entry = Entry(self.upload_img1_frame, font=('', 17))
+        self.folder_img = PhotoImage(file='src/img/folder.png')
+        self.folder_but = Button(self.upload_img1_frame, image=self.folder_img)
+        self.ok_but = Button(self.upload_img1_frame, text='确  定', )
+        self.params_label = Label(self.upload_img1_frame, text='图片类型：')
+        self.params = [('生活照', 1), ('身份证芯片照', 2), ('带水印证件照', 3), ('证件照片', 4)]
+        self.v = IntVar()
+        i = 1
+        for param, num in self.params:
+            i = i + 1
+            self.params_radiobut = Radiobutton(master=self.upload_img1_frame, text=param, value=num, variable=self.v,
+                                               font=('', 12))
+            self.params_radiobut.grid(row=5, column=i, sticky='w')
         # 图片2上传
         self.upload_img2_frame = LabelFrame(master=self.fun2_win, text='上传图片2')
 
         # 布局
         self.fun2_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
-        self.img1_frame.grid(row=2, column=2, padx=5)
-        self.img2_frame.grid(row=2, column=3, padx=5)
-        self.upload_img1_frame.grid(row=3, column=2)
+        self.fun2_win.propagate(flag=False)
+
+        self.img1_frame.grid(row=2, column=2, padx=3)
+        self.img1_label.grid(row=1, column=1)
+
+        self.img2_label.grid(row=1, column=2)
+        self.img2_frame.grid(row=2, column=3, padx=3)
+
+        self.upload_img1_frame.grid(row=3, column=2, sticky='w' + 'e')
+        self.file1_entry.grid(row=3, column=2, columnspan=3, padx=0, sticky='w' + 'e')
+        self.folder_but.grid(row=3, column=5)
+        self.ok_but.grid(row=3, column=6, sticky='e')
+        self.params_label.grid(row=4, column=2, sticky='w')
+
         self.upload_img2_frame.grid(row=3, column=3)
 
 
