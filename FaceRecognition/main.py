@@ -50,7 +50,7 @@ class Home(Frame):
         self.fun4_but.bind('<Button-1>', self.fun4_but_ev)
         self.fun5_but.bind('<Button-1>', self.fun5_but_ev)
 
-    def fun1_but_ev(self, event):  # 要加event参数才能被调用
+    def fun1_but_ev(self, event):  # 要加event参数才能被调用，之后的按钮用command调用，不知道为什么用bind会点下去弹不起来
         Face(master=self.master)
 
     def fun2_but_ev(self, event):
@@ -89,8 +89,9 @@ class Face(Frame):
         self.upload_img_frame = LabelFrame(master=self.fun1_win, text='上传图片')
         self.file_entry = Entry(self.upload_img_frame, font=('', 17))
         self.folder_img = PhotoImage(file='src/img/folder.png')
-        self.folder_but = Button(self.upload_img_frame, image=self.folder_img)
-        self.ok_but = Button(self.upload_img_frame, text='确  定', )
+        self.folder_but = Button(self.upload_img_frame, image=self.folder_img,
+                                 command=self.open_file)  # command的参数的函数加了()就会自动调用
+        self.ok_but = Button(self.upload_img_frame, text='确  定', command=self.face_recognition)
         self.params_label = Label(self.upload_img_frame, text='识别参数：')
         # self.live = IntVar()
         # self.live_check = Checkbutton(master=self.up_frame, text='图片活体检测', variable=self.live, )
@@ -119,10 +120,10 @@ class Face(Frame):
         self.params_label.grid(row=4, column=2)
 
         # 按键绑定
-        self.ok_but.bind('<Button-1>', self.face_recognition)
-        self.folder_but.bind('<Button-1>', self.open_file)
+        # self.ok_but.bind('<Button-1>', self.face_recognition)
+        # self.folder_but.bind('<Button-1>', self.open_file)
 
-    def face_recognition(self, event):
+    def face_recognition(self):
         """上传图片请求识别，返回识别结果，不要开代理！！！"""
         self.face_field = ''
         for p in self.params:
@@ -130,7 +131,8 @@ class Face(Frame):
                 self.face_field = self.face_field + p + ','
                 print(self.face_field)
         print(self.file_path)
-        # 之后将文件路径参数改成从entry控件获取
+        # TODO: 之后将文件路径参数改成从entry控件获取
+        # TODO: 完善一下其他情况的显示
         self.result_json = fc.base64_recognition(self.file_path, self.face_field)
         print(self.result_json)
         self.show_result()
@@ -139,7 +141,7 @@ class Face(Frame):
         i = 1
         self.face_result_frame.destroy()
         self.face_result_frame = Frame(master=self.result_frame, width=280)
-        # 选择查看识别结果
+        # TODO: 选择查看识别结果
         # self.face_result_label = Label(master=self.face_result_frame,
         #                                text='识别到' + str(self.result_json['result']['face_num']) + '张人脸，查看第', font=('', 12))
         # self.face_result_but = ttk.Combobox(master=self.face_result_frame, )
@@ -170,7 +172,7 @@ class Face(Frame):
                         'neutral', '无').replace('pouty', '撅嘴').replace('grimace', '鬼脸').replace('0', '无').replace('1',
                                                                                                                   '有')
 
-    def open_file(self, event):
+    def open_file(self):
         """打开选择的文件并显示"""
         self.file_path = fc.open_file()
         print(self.file_path)
@@ -197,37 +199,87 @@ class FaceCompare(Frame):
         self.upload_img1_frame = LabelFrame(master=self.fun2_win, text='上传图片1')
         self.file1_entry = Entry(self.upload_img1_frame, font=('', 17))
         self.folder_img = PhotoImage(file='src/img/folder.png')
-        self.folder_but = Button(self.upload_img1_frame, image=self.folder_img)
-        self.ok_but = Button(self.upload_img1_frame, text='确  定', )
+        self.folder_but = Button(self.upload_img1_frame, image=self.folder_img, command=self.open_file1)
+        self.ok_but = Button(self.upload_img1_frame, text='确  定', command=self.compare)
         self.params_label = Label(self.upload_img1_frame, text='图片类型：')
-        self.params = [('生活照', 1), ('身份证芯片照', 2), ('带水印证件照', 3), ('证件照片', 4)]
-        self.v = IntVar()
+        self.params = [('生活照', 'LIVE'), ('身份证芯片照', 'IDCARD'), ('带水印证件照', 'WATERMARK'), ('证件照片', 'CERT')]
+        self.v = StringVar()
         i = 1
-        for param, num in self.params:
+        for param, string in self.params:
             i = i + 1
-            self.params_radiobut = Radiobutton(master=self.upload_img1_frame, text=param, value=num, variable=self.v,
+            self.v.set(0)  # 字符串变量默认值是''，会导致第一次运行时全选，设置为0后为全不选状态
+            self.params_radiobut = Radiobutton(master=self.upload_img1_frame, text=param, value=string, variable=self.v,
                                                font=('', 12))
             self.params_radiobut.grid(row=5, column=i, sticky='w')
         # 图片2上传
         self.upload_img2_frame = LabelFrame(master=self.fun2_win, text='上传图片2')
+        self.file2_entry = Entry(self.upload_img2_frame, font=('', 17))
+        self.folder2_but = Button(self.upload_img2_frame, image=self.folder_img, command=self.open_file2)
+        self.ok2_but = Button(self.upload_img2_frame, text='确  定', command=self.compare)
+        self.params2_label = Label(self.upload_img2_frame, text='图片类型：')
+        self.v2 = StringVar()
+        j = 1
+        for param, string in self.params:
+            j = j + 1
+            self.v2.set(0)
+            self.params2_radiobut = Radiobutton(master=self.upload_img2_frame, text=param, value=string,
+                                                variable=self.v2,
+                                                font=('', 12))
+            self.params2_radiobut.grid(row=5, column=j, sticky='w')
+        # 显示结果
+        self.result_frame = LabelFrame(master=self.fun2_win, text='对比结果', height=230)
+        self.show_result_label = Label(master=self.result_frame, text='233', font=('', 12))
 
         # 布局
         self.fun2_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
-        self.fun2_win.propagate(flag=False)
 
         self.img1_frame.grid(row=2, column=2, padx=3)
         self.img1_label.grid(row=1, column=1)
 
-        self.img2_label.grid(row=1, column=2)
         self.img2_frame.grid(row=2, column=3, padx=3)
+        self.img2_label.grid(row=1, column=2)
 
-        self.upload_img1_frame.grid(row=3, column=2, sticky='w' + 'e')
+        self.upload_img1_frame.grid(row=3, column=2, padx=3, sticky='w' + 'e')
         self.file1_entry.grid(row=3, column=2, columnspan=3, padx=0, sticky='w' + 'e')
-        self.folder_but.grid(row=3, column=5)
+        self.folder_but.grid(row=3, column=5, sticky='w')
         self.ok_but.grid(row=3, column=6, sticky='e')
         self.params_label.grid(row=4, column=2, sticky='w')
 
-        self.upload_img2_frame.grid(row=3, column=3)
+        self.upload_img2_frame.grid(row=3, column=3, padx=3, sticky='w' + 'e')
+        self.file2_entry.grid(row=3, column=2, columnspan=3, padx=0, sticky='w' + 'e')
+        self.folder2_but.grid(row=3, column=5, sticky='w')
+        self.ok2_but.grid(row=3, column=6, sticky='e')
+        self.params2_label.grid(row=4, column=2)
+
+        self.result_frame.grid(row=4, column=2, columnspan=2, padx=3, sticky='n' + 's' + 'w' + 'e')
+        self.result_frame.grid_propagate(flag=False)
+        self.show_result_label.grid(row=2, column=2)
+
+        # 按键绑定
+        # self.folder_but.bind('<Button-1>', self.open_file1)
+        # self.folder2_but.bind('<Button-1>', self.open_file2)
+
+    def open_file1(self):
+        self.file1_path = fc.open_file()
+        print(self.file1_path)
+        self.file1_entry.delete(0, END)
+        self.file1_entry.insert(END, self.file1_path)
+        self.show_img1 = fc.modify_img(self.file1_path, 485, 400)
+        self.img1_label['image'] = self.show_img1
+
+    def open_file2(self):
+        self.file2_path = fc.open_file()
+        print(self.file2_path)
+        self.file2_entry.delete(0, END)
+        self.file2_entry.insert(END, self.file2_path)
+        self.show_img2 = fc.modify_img(self.file2_path, 485, 400)
+        self.img2_label['image'] = self.show_img2
+
+    def compare(self):
+        if self.file1_entry.get() == '' or self.file2_entry.get() == '':
+            pass
+        else:
+            fc.compare_request(self.file1_entry.get(), self.file2_entry.get(), self.v.get(), self.v2.get())
 
 
 if __name__ == '__main__':

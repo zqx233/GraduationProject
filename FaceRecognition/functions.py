@@ -26,6 +26,9 @@ def modify_img(file_path, x, y):
     return ImageTk.PhotoImage(out_img)
 
 
+access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'
+
+
 def base64_recognition(file, params):
     """将本地图片编码为base64上传"""
     with open(file, 'rb') as f:
@@ -33,11 +36,28 @@ def base64_recognition(file, params):
         b64 = img_base64.decode()
     request_url = "https://aip.baidubce.com/rest/2.0/face/v3/detect"
     params = "{\"image\":\"" + b64 + "\",\"image_type\":\"BASE64\",\"face_field\":\"" + params + "\",\"max_face_num\":\"30\"} "
-    # access_token只有一个月有效期，最后记得完善一下
-    access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'
+    # TODO: access_token只有一个月有效期，最后记得完善一下
     request_url = request_url + "?access_token=" + access_token
     headers = {'content-type': 'application/json'}
     response = requests.post(request_url, data=params, headers=headers)
-    # 之后完善一下报错功能
+    # TODO: 之后完善一下报错功能
     if response:
         return response.json()
+
+
+def compare_request(file1, file2, params1, params2):
+    with open(file1, 'rb') as f1:
+        img1_base64 = base64.b64encode(f1.read())
+        img1_b64 = img1_base64.decode()
+    with open(file2, 'rb') as f2:
+        img2_base64 = base64.b64encode(f2.read())
+        img2_b64 = img2_base64.decode()
+
+    request_url = "https://aip.baidubce.com/rest/2.0/face/v3/match"
+
+    params = "[{\"image\": \"" + img1_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + str(params1) + "\", \"quality_control\": \"LOW\"},{\"image\": \"" + img2_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + str(params2) + "'\", \"quality_control\": \"LOW\"}]"
+    request_url = request_url + "?access_token=" + access_token
+    headers = {'content-type': 'application/json'}
+    response = requests.post(request_url, data=params, headers=headers)
+    if response:
+        print(response.json())
