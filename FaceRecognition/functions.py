@@ -54,10 +54,12 @@ def compare_request(file1, file2, params1, params2):
         img2_b64 = img2_base64.decode()
 
     request_url = "https://aip.baidubce.com/rest/2.0/face/v3/match"
-
-    params = "[{\"image\": \"" + img1_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + str(params1) + "\", \"quality_control\": \"LOW\"},{\"image\": \"" + img2_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + str(params2) + "'\", \"quality_control\": \"LOW\"}]"
+    print(params1)
+    print(params2)
+    params = "[{\"image\": \"" + img1_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + params1 + "\", \"quality_control\": \"LOW\"},{\"image\": \"" + img2_b64 + "\", \"image_type\": \"BASE64\", \"face_type\": \"" + params2 + "\", \"quality_control\": \"LOW\"}]"
+    # print(params)
     request_url = request_url + "?access_token=" + access_token
     headers = {'content-type': 'application/json'}
     response = requests.post(request_url, data=params, headers=headers)
     if response:
-        print(response.json())
+        return response.json()['result']['score']

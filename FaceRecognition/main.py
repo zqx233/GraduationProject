@@ -207,7 +207,7 @@ class FaceCompare(Frame):
         i = 1
         for param, string in self.params:
             i = i + 1
-            self.v.set(0)  # 字符串变量默认值是''，会导致第一次运行时全选，设置为0后为全不选状态
+            self.v.set('LIVE')  # 字符串变量默认值是''，会导致第一次运行时全选，设置为0后为全不选状态
             self.params_radiobut = Radiobutton(master=self.upload_img1_frame, text=param, value=string, variable=self.v,
                                                font=('', 12))
             self.params_radiobut.grid(row=5, column=i, sticky='w')
@@ -221,14 +221,14 @@ class FaceCompare(Frame):
         j = 1
         for param, string in self.params:
             j = j + 1
-            self.v2.set(0)
+            self.v2.set('LIVE')
             self.params2_radiobut = Radiobutton(master=self.upload_img2_frame, text=param, value=string,
                                                 variable=self.v2,
                                                 font=('', 12))
             self.params2_radiobut.grid(row=5, column=j, sticky='w')
         # 显示结果
         self.result_frame = LabelFrame(master=self.fun2_win, text='对比结果', height=230)
-        self.show_result_label = Label(master=self.result_frame, text='233', font=('', 12))
+        self.show_result_label = Label(master=self.result_frame, text='', font=('', 20))
 
         # 布局
         self.fun2_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
@@ -253,7 +253,7 @@ class FaceCompare(Frame):
 
         self.result_frame.grid(row=4, column=2, columnspan=2, padx=3, sticky='n' + 's' + 'w' + 'e')
         self.result_frame.grid_propagate(flag=False)
-        self.show_result_label.grid(row=2, column=2)
+        self.show_result_label.grid(row=2, column=2, sticky='n')
 
         # 按键绑定
         # self.folder_but.bind('<Button-1>', self.open_file1)
@@ -261,7 +261,6 @@ class FaceCompare(Frame):
 
     def open_file1(self):
         self.file1_path = fc.open_file()
-        print(self.file1_path)
         self.file1_entry.delete(0, END)
         self.file1_entry.insert(END, self.file1_path)
         self.show_img1 = fc.modify_img(self.file1_path, 485, 400)
@@ -269,7 +268,6 @@ class FaceCompare(Frame):
 
     def open_file2(self):
         self.file2_path = fc.open_file()
-        print(self.file2_path)
         self.file2_entry.delete(0, END)
         self.file2_entry.insert(END, self.file2_path)
         self.show_img2 = fc.modify_img(self.file2_path, 485, 400)
@@ -279,7 +277,8 @@ class FaceCompare(Frame):
         if self.file1_entry.get() == '' or self.file2_entry.get() == '':
             pass
         else:
-            fc.compare_request(self.file1_entry.get(), self.file2_entry.get(), self.v.get(), self.v2.get())
+            self.show_result_label['text'] = '相似度为' + str(
+                fc.compare_request(self.file1_entry.get(), self.file2_entry.get(), self.v.get(), self.v2.get())) + '%'
 
 
 if __name__ == '__main__':
