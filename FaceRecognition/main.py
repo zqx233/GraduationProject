@@ -31,7 +31,7 @@ class Home(Frame):
                                compound='top')
         self.fun3_but = Button(self.master, width=140, height=130, text='人脸搜索', font=('', 12), image=self.fun3_img,
                                compound='top')
-        self.fun4_but = Button(self.master, width=140, height=130, text='图片活体检测', font=('', 12), image=self.fun4_img,
+        self.fun4_but = Button(self.master, width=140, height=130, text='人脸库管理', font=('', 12), image=self.fun4_img,
                                compound='top')
         self.fun5_but = Button(self.master, width=140, height=130, text='关于', font=('', 12), image=self.fun5_img,
                                compound='top')
@@ -57,10 +57,10 @@ class Home(Frame):
         FaceCompare(master=self.master)
 
     def fun3_but_ev(self, event):
-        Face(master=self.master)
+        FaceSearch(master=self.master)
 
     def fun4_but_ev(self, event):
-        Face(master=self.master)
+        FaceDatabase(master=self.master)
 
     def fun5_but_ev(self, event):
         Face(master=self.master)
@@ -279,6 +279,61 @@ class FaceCompare(Frame):
         else:
             self.show_result_label['text'] = '相似度为' + str(
                 fc.compare_request(self.file1_entry.get(), self.file2_entry.get(), self.v.get(), self.v2.get())) + '%'
+
+
+class FaceSearch(Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        # 搜索窗口
+        self.fun3_win = LabelFrame(master=self.master, text='人脸搜索')
+        self.fun3_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
+        # 被搜索图片展示部分
+        self.img_frame = LabelFrame(master=self.fun3_win, text='图片')
+        self.up_img = PhotoImage(file='src/img/upload.png')
+        self.img_label = Label(master=self.img_frame, width=680, height=400, image=self.up_img)
+        # 上传图片以及参数部分
+        self.upload_img_frame = LabelFrame(master=self.fun3_win, text='上传图片')
+        self.file_entry = Entry(self.upload_img_frame, font=('', 17))
+        self.folder_img = PhotoImage(file='src/img/folder.png')
+        self.folder_but = Button(self.upload_img_frame, image=self.folder_img)
+        self.ok_but = Button(self.upload_img_frame, text='确  定')
+        # 结果展示部分
+
+
+class FaceDatabase(Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        # 人脸库窗口
+        self.fun4_win = LabelFrame(master=self.master, text='人脸库管理', width=1000)
+        # 选择用户部分
+        self.select_frame = Frame(master=self.fun4_win)
+        self.select_group_label = Label(master=self.select_frame, text='用户组：')
+        self.select_group_combobox = ttk.Combobox(master=self.select_frame)
+        self.select_user_label = Label(master=self.select_frame, text='用户：')
+        self.select_user_combobox = ttk.Combobox(master=self.select_frame)
+        # self.select_user_combobox['value']=()
+        self.select_ok_button = Button(master=self.select_frame, text='确 定', command=self.show_user_img)
+        # 显示用户所有图片部分
+        self.user_img_frame = Frame(master=self.fun4_win)
+        self.user_load_img = PhotoImage(file='src/img/upload.png')
+
+        # 布局
+        self.fun4_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
+        self.fun4_win.grid_propagate(flag=False)
+        self.select_frame.grid(row=2, column=2, pady=5, sticky='w' + 'e')
+        self.select_group_label.grid(row=2, column=2)
+        self.select_group_combobox.grid(row=2, column=3)
+        self.select_user_label.grid(row=2, column=4)
+        self.select_user_combobox.grid(row=2, column=5)
+        self.select_ok_button.grid(row=2, column=6)
+        self.user_img_frame.grid(row=3, column=2, columnspan=3)
+
+    def show_user_img(self):
+        for i in range(0, 20):
+            self.user_img_label = Label(master=self.user_img_frame, image=self.user_load_img)
+            self.user_img_label.grid(row=i // 5, column=i % 5, padx=2, pady=2)
 
 
 if __name__ == '__main__':
