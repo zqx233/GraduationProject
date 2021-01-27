@@ -63,3 +63,23 @@ def compare_request(file1, file2, params1, params2):
     response = requests.post(request_url, data=params, headers=headers)
     if response:
         return response.json()['result']['score']
+
+def get_group():
+    request_url = "https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/getlist"
+
+    params = "{\"start\":0,\"length\":100}"
+    request_url = request_url + "?access_token=" + access_token
+    headers = {'content-type': 'application/json'}
+    response = requests.post(request_url, data=params, headers=headers)
+    if response:
+        return response.json()['result']['group_id_list']
+
+def get_user(group_id):
+    request_url = "https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/getusers"
+
+    params = "{\"group_id\":\""+group_id+"\"}"
+    request_url = request_url + "?access_token=" + access_token
+    headers = {'content-type': 'application/json'}
+    response = requests.post(request_url, data=params, headers=headers)
+    if response:
+        return response.json()['result']['user_id_list']

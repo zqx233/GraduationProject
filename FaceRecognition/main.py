@@ -311,9 +311,9 @@ class FaceDatabase(Frame):
         self.select_frame = Frame(master=self.fun4_win)
         self.select_group_label = Label(master=self.select_frame, text='用户组：')
         self.select_group_combobox = ttk.Combobox(master=self.select_frame)
+        self.select_group_combobox['value'] = fc.get_group()
         self.select_user_label = Label(master=self.select_frame, text='用户：')
         self.select_user_combobox = ttk.Combobox(master=self.select_frame)
-        # self.select_user_combobox['value']=()
         self.select_ok_button = Button(master=self.select_frame, text='确 定', command=self.show_user_img)
         # 显示用户所有图片部分
         self.user_img_frame = Frame(master=self.fun4_win)
@@ -330,7 +330,13 @@ class FaceDatabase(Frame):
         self.select_ok_button.grid(row=2, column=6)
         self.user_img_frame.grid(row=3, column=2, columnspan=3)
 
+        self.select_user_combobox.bind('<Button-1>', self.show_user)
+
+    def show_user(self, event):
+        self.select_user_combobox['value'] = fc.get_user(self.select_group_combobox.get())
+
     def show_user_img(self):
+        print(fc.get_group())
         for i in range(0, 20):
             self.user_img_label = Label(master=self.user_img_frame, image=self.user_load_img)
             self.user_img_label.grid(row=i // 5, column=i % 5, padx=2, pady=2)
