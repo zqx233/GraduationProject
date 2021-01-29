@@ -1,4 +1,5 @@
 import base64
+import os
 import tkinter.filedialog
 
 import requests
@@ -46,6 +47,7 @@ def base64_recognition(file, params):
 
 
 def compare_request(file1, file2, params1, params2):
+    """人脸对比请求"""
     with open(file1, 'rb') as f1:
         img1_base64 = base64.b64encode(f1.read())
         img1_b64 = img1_base64.decode()
@@ -65,6 +67,7 @@ def compare_request(file1, file2, params1, params2):
         return response.json()['result']['score']
 
 def get_group():
+    """获取用户组列表"""
     request_url = "https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/getlist"
 
     params = "{\"start\":0,\"length\":100}"
@@ -75,6 +78,7 @@ def get_group():
         return response.json()['result']['group_id_list']
 
 def get_user(group_id):
+    """获取选定组内用户列表"""
     request_url = "https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/getusers"
 
     params = "{\"group_id\":\""+group_id+"\"}"
@@ -83,3 +87,28 @@ def get_user(group_id):
     response = requests.post(request_url, data=params, headers=headers)
     if response:
         return response.json()['result']['user_id_list']
+
+def check_local_file():
+    """检查本地人脸库是否完善"""
+    if os.path.exists('FaceDatabase'):
+        print(True)
+        for group_folder in get_group():
+            if os.path.exists('FaceDatabase\\'+group_folder):
+                print('ttttt')
+                for user_folder in get_user(group_folder):
+                    if os.path.exists('FaceDatabase\\'+group_folder+'\\'+user_folder):
+                        print('tttttttttttt')
+                    else:
+                        os.mkdir('FaceDatabase\\'+group_folder+'\\'+user_folder)
+            else:
+                os.mkdir('FaceDatabase\\'+group_folder)
+    else:
+        os.mkdir('FaceDatabase')
+        for group_folder in get_group():
+            os.mkdir('FaceDatabase/'+group_folder)
+            print('ttt')
+            for user_folder in get_user(group_folder):
+                os.mkdir('FaceDatabase\\' + group_folder + '\\' + user_folder)
+
+check_local_file()
+
