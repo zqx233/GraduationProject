@@ -1,5 +1,6 @@
 import base64
 import json
+from time import sleep
 from tkinter import *
 import tkinter.filedialog
 import tkinter.messagebox
@@ -119,10 +120,6 @@ class Face(Frame):
         self.ok_but.grid(row=3, column=10, sticky='e')
         self.params_label.grid(row=4, column=2)
 
-        # 按键绑定
-        # self.ok_but.bind('<Button-1>', self.face_recognition)
-        # self.folder_but.bind('<Button-1>', self.open_file)
-
     def face_recognition(self):
         """上传图片请求识别，返回识别结果，不要开代理！！！"""
         self.face_field = ''
@@ -183,6 +180,8 @@ class Face(Frame):
 
 
 class FaceCompare(Frame):
+    """人脸对比界面"""
+
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
@@ -282,6 +281,8 @@ class FaceCompare(Frame):
 
 
 class FaceSearch(Frame):
+    """人脸搜索界面"""
+
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
@@ -302,6 +303,8 @@ class FaceSearch(Frame):
 
 
 class FaceDatabase(Frame):
+    """人脸库管理界面"""
+
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
@@ -314,16 +317,17 @@ class FaceDatabase(Frame):
         self.select_user_label = Label(master=self.select_frame, text='用户：')
         self.select_user_combobox = ttk.Combobox(master=self.select_frame)
         self.select_ok_button = Button(master=self.select_frame, text='查 询', command=self.show_user_img)
-        self.add_face_button = Button(master=self.select_frame, text='添加人脸')
+        # 用户、组增删
+        self.add_face_button = Button(master=self.select_frame, text='添加人脸', command=self.new_user_win)
+        self.new_group_but = Button(master=self.select_frame, text='新建组', command=self.new_group_win)
+        self.delete_group_but = Button(master=self.select_frame, text='删除当前组', foreground='red',
+                                       command=lambda: fc.delete_group(self.select_group_combobox.get()))
+        self.delete_user_but = Button(master=self.select_frame, text='删除当前用户', foreground='red',
+                                      command=lambda: fc.delete_user(self.select_group_combobox.get(),
+                                                                     self.select_user_combobox.get()))
         # 显示用户所有图片部分
         self.user_img_frame = Frame(master=self.fun4_win)
         self.user_load_img = PhotoImage(file='src/img/upload.png')
-        # 新建组
-        self.new_group_but = Button(master=self.select_frame, text='新建组', command=self.new_group_win)
-
-        # 新建用户
-        self.new_user_but = Button(master=self.select_frame, text='新建用户', command=self.new_user_win)
-
         # 布局
         self.fun4_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
         self.fun4_win.grid_propagate(flag=False)
@@ -333,10 +337,11 @@ class FaceDatabase(Frame):
         self.select_user_label.grid(row=2, column=4)
         self.select_user_combobox.grid(row=2, column=5)
         self.select_ok_button.grid(row=2, column=6)
-        self.user_img_frame.grid(row=3, column=2, columnspan=3)
+        self.user_img_frame.grid(row=3, column=2, columnspan=3, sticky='w')
         self.add_face_button.grid(row=2, column=7, padx=20)
         self.new_group_but.grid(row=2, column=8)
-        self.new_user_but.grid(row=2, column=9, padx=20)
+        self.delete_group_but.grid(row=2, column=9, padx=20)
+        self.delete_user_but.grid(row=2, column=10)
 
         self.select_group_combobox.bind('<Button-1>', self.show_group)
         self.select_user_combobox.bind('<Button-1>', self.show_user)
@@ -351,10 +356,14 @@ class FaceDatabase(Frame):
 
     def show_user_img(self):
         """显示所选用户所有照片"""
-        print(fc.get_group())
-        for i in range(0, 20):
-            self.user_img_label = Label(master=self.user_img_frame, image=self.user_load_img)
-            self.user_img_label.grid(row=i // 5, column=i % 5, padx=2, pady=2)
+        self.user_img = []  # 用一个列表来保存一个用户所有的人脸，使得可以批量显示，否则只是显示最后一个，其他的图片会丢失
+        self.user_img_list = fc.get_user_face_list(self.select_group_combobox.get(), self.select_user_combobox.get())
+        for i in range(0, len(self.user_img_list)):
+            self.user_img_path = 'FaceDatabase/' + self.select_group_combobox.get() + '/' + self.select_user_combobox.get() + '/' + \
+                                 str(self.user_img_list[i]['face_token']) + '.jpg'
+            self.user_img.append(fc.modify_img(self.user_img_path, 195, 170))
+            self.user_img_label = Label(master=self.user_img_frame, image=self.user_img[i], width=195, height=170)
+            self.user_img_label.grid(row=i // 5, column=i % 5, padx=2, pady=2, sticky='w')
 
     def new_group_win(self):
         """打开新建组窗口"""
@@ -363,36 +372,50 @@ class FaceDatabase(Frame):
         self.new_group_win.geometry('555x190')
         self.new_group_label = Label(master=self.new_group_win, text='由数字、字母和下划线组成，最多48个字符：')
         self.new_group_entry = Entry(master=self.new_group_win, font=('', 15), width=48)
-        self.new_group_ok_but = Button(master=self.new_group_win, text='确 定')
+        self.new_group_ok_but = Button(master=self.new_group_win, text='确 定',
+                                       command=lambda: fc.new_group(self.new_group_entry.get()))
         self.new_group_label.grid(row=1, column=2, padx=88, pady=20)
         self.new_group_entry.grid(row=2, column=2, padx=30)
         self.new_group_ok_but.grid(row=3, column=2, pady=25)
 
     def new_user_win(self):
-        """打开新建用户窗口"""
+        """打开添加人脸窗口"""
         self.new_user_win = Toplevel(master=self.master, height=245, width=425)
-        self.new_user_win.title('新建用户')
-        self.new_user_win.geometry('820x465')
-        self.new_user_label = Label(master=self.new_user_win, text='由数字、字母和下划线组成，最多128个字符：')
+        self.new_user_win.title('添加人脸')
+        self.new_user_win.geometry('760x465')
+        self.note_label = Label(master=self.new_user_win, text='由数字、字母和下划线组成，最多128个字符')
         self.new_user_group_label = Label(master=self.new_user_win, text='用户组：')
         self.new_user_group_combobox = ttk.Combobox(master=self.new_user_win)
-        self.new_user_entry = Entry(master=self.new_user_win, font=('', 15), width=48)
-        self.new_user_ok_but = Button(master=self.new_user_win, text='确  定')
+        self.new_user_label = Label(master=self.new_user_win, text='用户：')
+        self.new_user_entry = Entry(master=self.new_user_win, font=('', 15), width=24)
+        self.new_user_ok_but = Button(master=self.new_user_win, text='确  定',
+                                      command=lambda: fc.new_user(self.new_user_img_path,
+                                                                  self.new_user_group_combobox.get(),
+                                                                  self.new_user_entry.get()))
         self.new_user_frame = LabelFrame(master=self.new_user_win)
         self.up_img = PhotoImage(file='src/img/upload.png')
         self.new_user_img_label = Label(master=self.new_user_frame,
-                                        text='点此添加图片\n请上传用户正面、无遮挡照片\n仅支持PNG、JPG、JPEG、BMP格式，大小5M以内\n若图片中包含多张人脸，则只注册图片中可检测到的最大脸',
+                                        text='点此添加图片\n请上传用户正面、无遮挡照片\n仅支持PNG、JPG、JPEG、BMP格式，大小5M以内\n若图片中包含多张人脸，则只注册图片中可检测到的最大脸\n若用户名已存在，则将追加到该用户下，每个用户最多可添加20张人脸照片',
                                         font=('', 15), image=self.up_img, compound='top', width=710, height=320)
 
-        self.new_user_label.grid(row=1, column=2, padx=50, pady=10)
-        self.new_user_group_label.grid(row=2, column=0)
-        self.new_user_group_combobox.grid(row=2, column=1)
-        self.new_user_entry.grid(row=2, column=2, padx=30)
-        self.new_user_frame.grid(row=3, column=0, columnspan=3, padx=40, pady=10)
+        self.new_user_group_label.grid(row=2, column=0, pady=10)
+        self.new_user_group_combobox.grid(row=2, column=1, pady=10)
+        self.new_user_label.grid(row=2, column=2, pady=10)
+        self.new_user_entry.grid(row=2, column=3, pady=10)
+        self.note_label.grid(row=2, column=4, padx=5, pady=10)
+        self.new_user_frame.grid(row=3, column=0, columnspan=5, padx=0, pady=10)
         self.new_user_img_label.grid(row=2, column=2)
-        self.new_user_ok_but.grid(row=4, column=2, sticky='e')
+        self.new_user_ok_but.grid(row=4, column=4, sticky='e')
 
         self.new_user_group_combobox.bind('<Button-1>', self.select_group)
+        self.new_user_img_label.bind('<Button-1>', self.add_img)
+
+    def add_img(self, event):
+        """新建用户界面添加图片"""
+        self.new_user_img_path = fc.open_file(parent=self.new_user_win)
+        self.show_new_user_img = fc.modify_img(self.new_user_img_path, 710, 320)
+        self.new_user_img_label['image'] = self.show_new_user_img
+        self.new_user_img_label['text'] = ''
 
     def select_group(self, event):
         """新建用户界面中显示所有组"""
