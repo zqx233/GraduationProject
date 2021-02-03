@@ -172,3 +172,16 @@ def delete_user(group_id, user_id):
         print(response.json())
         if response.json()['error_code'] == 0:
             shutil.rmtree('FaceDatabase\\' + group_id + '\\' + user_id)
+
+
+def face_search(file, group_id):
+    with open(file, 'rb') as f:
+        img_base64 = base64.b64encode(f.read())
+        img_b64 = img_base64.decode()
+    request_url = "https://aip.baidubce.com/rest/2.0/face/v3/search"
+    params = "{\"image\":\"" + img_b64 + "\",\"image_type\":\"BASE64\",\"group_id_list\":\"" + group_id + "\",\"max_user_num\":\"4\"}"
+    request_url = request_url + "?access_token=" + access_token
+    response = requests.post(request_url, data=params, headers=headers)
+    if response:
+        print(response.json())
+        return response.json()['result']['user_list']

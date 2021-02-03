@@ -290,16 +290,65 @@ class FaceSearch(Frame):
         self.fun3_win = LabelFrame(master=self.master, text='人脸搜索')
         self.fun3_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
         # 被搜索图片展示部分
-        self.img_frame = LabelFrame(master=self.fun3_win, text='图片')
+        self.img_frame = LabelFrame(master=self.fun3_win, text='被查人脸')
         self.up_img = PhotoImage(file='src/img/upload.png')
-        self.img_label = Label(master=self.img_frame, width=680, height=400, image=self.up_img)
+        self.img_label = Label(master=self.img_frame, width=485, height=400, image=self.up_img)
         # 上传图片以及参数部分
         self.upload_img_frame = LabelFrame(master=self.fun3_win, text='上传图片')
         self.file_entry = Entry(self.upload_img_frame, font=('', 17))
         self.folder_img = PhotoImage(file='src/img/folder.png')
-        self.folder_but = Button(self.upload_img_frame, image=self.folder_img)
-        self.ok_but = Button(self.upload_img_frame, text='确  定')
+        self.folder_but = Button(self.upload_img_frame, image=self.folder_img, command=self.open_file)
+        self.ok_but = Button(self.upload_img_frame, text='确  定', command=self.show_result)
+        self.search_label = Label(master=self.upload_img_frame, text='搜索范围：')
+        self.search_combobox = ttk.Combobox(master=self.upload_img_frame)
+
         # 结果展示部分
+        self.result_frame = LabelFrame(master=self.fun3_win, text='查找结果', width=490, height=425)
+
+        self.fun3_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
+        self.img_frame.grid(row=2, column=2, padx=3)
+        self.img_label.grid(row=1, column=1)
+        self.upload_img_frame.grid(row=3, column=2, sticky='w' + 'e')
+        self.file_entry.grid(row=2, column=2, columnspan=3, sticky='w' + 'e')
+        self.folder_but.grid(row=2, column=5, sticky='w')
+        self.ok_but.grid(row=2, column=6, padx=15)
+        self.search_label.grid(row=3, column=2, sticky='w')
+        self.search_combobox.grid(row=4, column=2, sticky='w')
+        self.result_frame.grid(row=2, column=3)
+        self.result_frame.grid_propagate(flag=False)
+
+        self.search_combobox.bind('<Button-1>', self.show_group)
+
+    def open_file(self):
+        """打开选择的文件并显示"""
+        self.file_path = fc.open_file()
+        print(self.file_path)
+        self.file_entry.delete(0, END)
+        self.file_entry.insert(END, self.file_path)
+        self.show_img = fc.modify_img(self.file_path, 680, 400)
+        self.img_label['image'] = self.show_img
+
+    def show_group(self, event):
+        self.search_combobox['value'] = fc.get_group()
+
+    def show_result(self):
+        self.result_img = []
+        self.result_user_list = fc.face_search(self.file_entry.get(), self.search_combobox.get())
+        print(self.result_user_list)
+        for i in range(4):
+            self.result_img_path = 'FaceDatabase/' + self.search_combobox.get() + '/' + str(
+                self.result_user_list[i]['user_id']) + '/' + str(
+                fc.get_user_face_list(self.search_combobox.get(), self.result_user_list[i]['user_id'])[0][
+                    'face_token']) + '.jpg'
+            self.result_img.append(fc.modify_img(self.result_img_path, 220, 200))
+            self.result_img_frame = Frame(master=self.result_frame)
+            self.result_user_label = Label(master=self.result_img_frame,
+                                           text='用户名：' + str(self.result_user_list[i]['user_id']))
+            self.result_user_img_label = Label(master=self.result_img_frame, image=self.result_img[i],
+                                               text='相似度：' + str(self.result_user_list[i]['score']), compound='top', width=220, height=210)
+            self.result_img_frame.grid(row=i // 2, column=i % 2, padx=2, pady=2)
+            self.result_user_label.grid(row=1, column=1)
+            self.result_user_img_label.grid(row=2, column=1)
 
 
 class FaceDatabase(Frame):
