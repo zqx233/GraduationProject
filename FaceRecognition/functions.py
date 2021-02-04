@@ -2,7 +2,6 @@ import base64
 import os
 import shutil
 import tkinter.filedialog
-
 import requests
 from PIL import Image, ImageTk
 
@@ -17,15 +16,25 @@ def open_file(parent=None):
 def modify_img(file_path, x, y):
     """将选择的图片处理成合适显示的大小"""
     up_img = Image.open(file_path)  # PhotoImage打开会报错，使用PIL库的ImageTK
-    # 按比例将图片缩放到Frame大小，也可以用self.up_img.width或.height获取宽高数值
-    if (up_img.size[0] / up_img.size[1]) > (x / y):
-        rate = x / up_img.size[0]
+    # 按比例将图片缩放到Frame大小，也可以用self.up_img.size[0]或.size[1]获取宽高数值
+    if up_img.width <= x and up_img.height <= y:
+        return ImageTk.PhotoImage(up_img)
     else:
-        rate = y / up_img.size[1]
-    rate = round(rate, 1)
-    # pillow中调整图片大小的方法，第二个参数是图片质量Image.NEAREST ：低质量Image.BILINEAR：双线性Image.BICUBIC ：三次样条插值Image.ANTIALIAS：高质量
-    out_img = up_img.resize((int(up_img.size[0] * rate), int(up_img.size[1] * rate)), Image.ANTIALIAS)
-    return ImageTk.PhotoImage(out_img)
+        if up_img.width - x > up_img.height - y:
+            rate = round(x / up_img.width, 1)
+            print('1')
+            print(up_img.width * rate)
+            print(up_img.height * rate)
+            # pillow中调整图片大小的方法，第二个参数是图片质量Image.NEAREST ：低质量Image.BILINEAR：双线性Image.BICUBIC ：三次样条插值Image.ANTIALIAS：高质量
+            return ImageTk.PhotoImage(
+                up_img.resize((int(up_img.width * rate), int(up_img.height * rate)), Image.ANTIALIAS))
+        else:
+            rate = round(y / up_img.height, 1)
+            print('2')
+            print(up_img.width * rate)
+            print(up_img.height * rate)
+            return ImageTk.PhotoImage(
+                up_img.resize((int(up_img.width * rate), int(up_img.height * rate)), Image.ANTIALIAS))
 
 
 access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'

@@ -1,18 +1,13 @@
-import base64
-import json
 from time import sleep
 from tkinter import *
-import tkinter.filedialog
 import tkinter.messagebox
 from tkinter import ttk
-
-import requests
-from PIL import Image
-from PIL import ImageTk
 import functions as fc
 
 
 class Home(Frame):
+    """主界面的功能按钮"""
+
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
@@ -23,7 +18,7 @@ class Home(Frame):
         self.fun1_img = PhotoImage(file='src/img/face.png')
         self.fun2_img = PhotoImage(file='src/img/compare.png')
         self.fun3_img = PhotoImage(file='src/img/search.png')
-        self.fun4_img = PhotoImage(file='src/img/detect.png')
+        self.fun4_img = PhotoImage(file='src/img/database.png')
         self.fun5_img = PhotoImage(file='src/img/about.png')
         # 按钮组件
         self.fun1_but = Button(self.master, width=140, height=130, text='人脸识别与属性分析', font=('', 12), image=self.fun1_img,
@@ -64,19 +59,15 @@ class Home(Frame):
         FaceDatabase(master=self.master)
 
     def fun5_but_ev(self, event):
-        Face(master=self.master)
+        About(master=self.master)
 
 
 class Face(Frame):
-    """功能1界面"""
+    """人脸识别与属性分析界面"""
 
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        # 功能1窗口
-        # self.fun1_win = Toplevel(master=self.master)
-        # self.fun1_win.title('人脸识别与属性分析')
-        # self.grid()
         self.fun1_win = LabelFrame(master=self.master, text='人脸识别与属性分析')
         self.fun1_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
         # 识别结果部分
@@ -303,7 +294,7 @@ class FaceSearch(Frame):
         self.search_combobox = ttk.Combobox(master=self.upload_img_frame)
 
         # 结果展示部分
-        self.result_frame = LabelFrame(master=self.fun3_win, text='查找结果', width=490, height=425)
+        self.result_frame = LabelFrame(master=self.fun3_win, text='查找结果', width=490, height=532)
 
         self.fun3_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
         self.img_frame.grid(row=2, column=2, padx=3)
@@ -313,8 +304,8 @@ class FaceSearch(Frame):
         self.folder_but.grid(row=2, column=5, sticky='w')
         self.ok_but.grid(row=2, column=6, padx=15)
         self.search_label.grid(row=3, column=2, sticky='w')
-        self.search_combobox.grid(row=4, column=2, sticky='w')
-        self.result_frame.grid(row=2, column=3)
+        self.search_combobox.grid(row=4, column=2, pady=5, sticky='w')
+        self.result_frame.grid(row=2, column=3, rowspan=2)
         self.result_frame.grid_propagate(flag=False)
 
         self.search_combobox.bind('<Button-1>', self.show_group)
@@ -340,15 +331,16 @@ class FaceSearch(Frame):
                 self.result_user_list[i]['user_id']) + '/' + str(
                 fc.get_user_face_list(self.search_combobox.get(), self.result_user_list[i]['user_id'])[0][
                     'face_token']) + '.jpg'
-            self.result_img.append(fc.modify_img(self.result_img_path, 220, 200))
+            self.result_img.append(fc.modify_img(self.result_img_path, 220, 190))
             self.result_img_frame = Frame(master=self.result_frame)
-            self.result_user_label = Label(master=self.result_img_frame,
-                                           text='用户名：' + str(self.result_user_list[i]['user_id']))
             self.result_user_img_label = Label(master=self.result_img_frame, image=self.result_img[i],
-                                               text='相似度：' + str(self.result_user_list[i]['score']), compound='top', width=220, height=210)
+                                               text='用户名：' + str(
+                                                   self.result_user_list[i]['user_id']) + '\n' + '相似度：' + str(
+                                                   self.result_user_list[i]['score']) + '%', compound='top', width=220,
+                                               height=250)
             self.result_img_frame.grid(row=i // 2, column=i % 2, padx=2, pady=2)
-            self.result_user_label.grid(row=1, column=1)
             self.result_user_img_label.grid(row=2, column=1)
+            sleep(0.5)
 
 
 class FaceDatabase(Frame):
@@ -469,6 +461,30 @@ class FaceDatabase(Frame):
     def select_group(self, event):
         """新建用户界面中显示所有组"""
         self.new_user_group_combobox['value'] = fc.get_group()
+
+
+class About(Frame):
+    """关于界面"""
+
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        # 关于界面窗口
+        self.fun5_win = LabelFrame(master=self.master, text='关于', width=1000, height=780)
+        self.title_label = Label(master=self.fun5_win, text='人脸识别系统', font=('', 20))
+        self.version_label = Label(master=self.fun5_win, text='V1.0\n作者：赵其昕')
+        self.introduce_label = Label(master=self.fun5_win,
+                                     text='基于Python开发，由百度AI支持的一款人脸识别系统，具有人脸识别与属性分析、人脸对比、人脸搜索、人脸库管理功能')
+        self.github_label = Label(master=self.fun5_win, text='Github项目地址：')
+        self.github_link_label = Label(master=self.fun5_win, text='https://github.com/zqx233/GraduationProject')
+
+        self.fun5_win.grid(row=2, column=3, rowspan=5, padx=5, pady=5, sticky='n' + 's' + 'w' + 'e')
+        self.fun5_win.grid_propagate(flag=False)
+        self.title_label.grid(row=2, column=2, columnspan=2)
+        self.version_label.grid(row=3, column=2, columnspan=2)
+        self.introduce_label.grid(row=4, column=2, columnspan=2)
+        self.github_label.grid(row=5, column=2)
+        self.github_link_label.grid(row=5, column=3)
 
 
 if __name__ == '__main__':
