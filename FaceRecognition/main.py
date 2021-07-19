@@ -123,6 +123,7 @@ class Face(Frame):
         # TODO: 完善一下其他情况的显示
         self.result_json = fc.base64_recognition(self.file_path, self.face_field)
         print(self.result_json)
+        # self.select_result()
         self.show_result()
 
     def show_result(self):
@@ -159,6 +160,60 @@ class Face(Frame):
                         'fear', '恐惧').replace('happy', '高兴').replace('sad', '伤心').replace('surprise', '惊讶').replace(
                         'neutral', '无').replace('pouty', '撅嘴').replace('grimace', '鬼脸').replace('0', '无').replace('1',
                                                                                                                   '有')
+
+    # def show_result(self, num):
+    #     """识别结果展示"""
+    #     i = 1
+    #
+    #     # self.face_result_frame = Frame(master=self.result_frame, width=280)
+    #
+    #     for r_p in self.params:
+    #         i = i + 1
+    #         self.show_result_frame = Frame(master=self.face_result_frame)
+    #         self.result_label = Label(master=self.show_result_frame, text=self.params[r_p][0] + '：', font=('', 12))
+    #         self.show_result_frame.grid(row=3, column=2, sticky='w' + 'e')
+    #         self.result_label.grid(row=i, column=2, columnspan=3, sticky='w')
+    #         if self.params[r_p][1].get():
+    #             if r_p in ('age', 'beauty'):
+    #                 self.result_label['text'] = self.params[r_p][0] + ':' + \
+    #                                             str(self.result_json['result']['face_list'][int(num)][r_p])
+    #             else:
+    #                 self.result_label['text'] = self.params[r_p][0] + ':' + str(
+    #                     self.result_json['result']['face_list'][int(num)][r_p]['type']).replace('none', '无').replace(
+    #                     'smile',
+    #                     '微笑').replace(
+    #                     'laugh', '大笑').replace('square', '方形').replace('triangle', '三角形').replace('oval', '椭圆').replace(
+    #                     'heart', '心形').replace('round', '圆形').replace('female', '女性').replace('male', '男性').replace(
+    #                     'common', '普通眼镜').replace('sun', '墨镜').replace('angry', '愤怒').replace('disgust', '厌恶').replace(
+    #                     'fear', '恐惧').replace('happy', '高兴').replace('sad', '伤心').replace('surprise', '惊讶').replace(
+    #                     'neutral', '无').replace('pouty', '撅嘴').replace('grimace', '鬼脸').replace('0', '无').replace('1',
+    #                                                                                                               '有')
+
+    # def select_result(self):
+    #     # TODO: 选择查看识别结果
+    #     self.show_result(0)
+    #     self.select_result_frame = Frame(master=self.face_result_frame)
+    #     self.face_result_label = Label(master=self.select_result_frame,
+    #                                    text='识别到' + str(self.result_json['result']['face_num']) + '张人脸，查看第',
+    #                                    font=('', 12))
+    #     self.face_result_combobox = ttk.Combobox(master=self.select_result_frame, width=2)
+    #     result_num = []  # 识别到的人脸数量的下拉列表
+    #     for i in range(int(self.result_json['result']['face_num'])):
+    #         result_num.append(i + 1)
+    #     self.face_result_combobox['value'] = result_num
+    #     self.face_result_combobox.current(0)
+    #     self.face_result_label2 = Label(master=self.select_result_frame, text='张人脸', font=('', 12))
+    #     self.select_result_frame.grid(row=1, column=2, sticky='w' + 'e')
+    #     # self.face_result_frame.grid(row=2, column=2, sticky='w' + 'e')
+    #     self.face_result_label.grid(row=1, column=2, columnspan=2, sticky='w')
+    #     self.face_result_combobox.grid(row=1, column=4, sticky='w')
+    #     self.face_result_label2.grid(row=1, column=5, sticky='w')
+    #
+    #     self.face_result_combobox.bind('<Button-1>', self.show_select_result)
+
+    # def show_select_result(self, event):
+    #     self.show_result_frame.destroy()
+    #     self.show_result(int(self.face_result_combobox.get()) - 1)
 
     def open_file(self):
         """打开选择的文件并显示"""

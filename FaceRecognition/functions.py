@@ -5,6 +5,11 @@ import tkinter.filedialog
 import requests
 from PIL import Image, ImageTk
 
+# 将getaccesstoken.py中获取的token复制到下方
+access_token = ''
+
+headers = {'content-type': 'application/json'}
+
 
 def open_file(parent=None):
     """打开文件"""
@@ -35,11 +40,6 @@ def modify_img(file_path, x, y):
             print(up_img.height * rate)
             return ImageTk.PhotoImage(
                 up_img.resize((int(up_img.width * rate), int(up_img.height * rate)), Image.ANTIALIAS))
-
-
-access_token = '24.037e02027b589adb179b494a9c83aff7.2592000.1613726893.282335-23545866'
-
-headers = {'content-type': 'application/json'}
 
 
 def base64_recognition(file, params):
